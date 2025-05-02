@@ -1,0 +1,31 @@
+<div *ngIf="schedules.length > 0; else noSchedules">
+
+
+
+
+
+
+</div> 
+ 
+
+
+<!-- Empty state template when no schedules exist -->
+<ng-template #noSchedules>
+    <nz-empty
+      nzNotFoundImage="https://gw.alipayobjects.com/zos/antfincdn/ZHrcdLPrvN/empty.svg"
+      [nzNotFoundContent]="contentTpl"
+    >
+      <ng-template #contentTpl>
+        <span>
+          Results: 
+          <a href="#API">No schedules found on system.</a>
+          <br/>
+          <!-- <button nz-button nzType="primary" (click)="showAddOfficerModal()" style="margin-top: 12px;">
+            Add Officer
+          </button> -->
+        </span>
+      </ng-template>
+    </nz-empty>
+  </ng-template>
+  
+  

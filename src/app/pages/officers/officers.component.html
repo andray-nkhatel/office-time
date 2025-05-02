@@ -1,0 +1,175 @@
+
+
+<div *ngIf="officers.length > 0; else noOfficers">
+    
+ 
+    
+     <nz-space [nzSize]="10">
+        <h1 *nzSpaceItem nz-typography>Officers</h1>
+        <button *nzSpaceItem nz-button nzType="primary" (click)="showAddOfficerModal()">Add</button>
+    </nz-space> 
+
+    
+
+    <nz-table #sortTable [nzBordered]="true" nzSize="small" [nzData]="officers" nzSize="middle">
+      
+      <thead>
+        <tr>
+          
+          <th *ngFor="let column of listOfColumn" [nzSortFn]="column.compare" [nzSortPriority]="column.priority">
+            {{ column.title }}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let officer of officers" (click)="openOfficerDetails(officer)">
+          <td>{{ officer.firstName }} {{ officer.lastName }}</td>
+          <td>{{ officer.gender === 0 ? 'Male' : 'Female' }}</td>
+          <td>{{ officer.shiftPreference === 0 ? 'Day' : officer.shiftPreference === 1 ? 'Night' : 'Both' }}</td>
+          <td>{{ getDayOff(officer.dayOff) }}</td>
+        </tr>
+      </tbody>
+      
+    </nz-table>
+</div>
+
+
+
+
+<!-- Officer Details Modal -->
+<nz-modal [(nzVisible)]="isOfficerDetailsVisible" nzTitle="Officer Details" (nzOnCancel)="closeOfficerDetails()">
+  <div *nzModalContent>
+    <ng-container *ngIf="selectedOfficer">
+      <p><strong>Name:</strong> {{ selectedOfficer.firstName }} {{ selectedOfficer.lastName }}</p>
+      <p><strong>Gender:</strong> {{ selectedOfficer.gender === 0 ? 'Male' : 'Female' }}</p>
+      <p><strong>Shift Preference:</strong> 
+        {{ selectedOfficer.shiftPreference === 0 ? 'Day' : selectedOfficer.shiftPreference === 1 ? 'Night' : 'Both' }}
+      </p>
+      <p><strong>Day Off:</strong> {{ getDayOff(selectedOfficer.dayOff) }}</p>
+    </ng-container>
+  </div>
+  <div *nzModalFooter>
+    <button type="button" nz-button nzType="primary" (click)="openEditOfficerModal()">Edit</button>
+    <button type="button" nz-button nzType="default" (click)="closeOfficerDetails()">Close</button>
+  </div>
+</nz-modal>
+
+
+<!-- Unified Add/Edit Officer Modal -->
+<nz-modal
+  [(nzVisible)]="isOfficerModalVisible"
+  [nzTitle]="isEditMode ? 'Edit Officer' : 'Add New Officer'"
+  (nzOnCancel)="closeOfficerModal()"
+>
+  <div *nzModalContent>
+    <form nz-form [formGroup]="officerForm" (ngSubmit)="submitOfficerForm()">
+      <!-- First Name -->
+      <nz-form-item>
+        <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired nzFor="firstName">First Name</nz-form-label>
+        <nz-form-control [nzSm]="14" [nzXs]="24" nzErrorTip="Please input officer's first name!">
+          <input nz-input formControlName="firstName" id="firstName" placeholder="First Name" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <!-- Last Name -->
+      <nz-form-item>
+        <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired nzFor="lastName">Last Name</nz-form-label>
+        <nz-form-control [nzSm]="14" [nzXs]="24" nzErrorTip="Please input officer's last name!">
+          <input nz-input formControlName="lastName" id="lastName" placeholder="Last Name" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <!-- Gender -->
+      <nz-form-item>
+        <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired nzFor="gender">Gender</nz-form-label>
+        <nz-form-control [nzSm]="14" [nzXs]="24" nzErrorTip="Please select gender!">
+          <nz-radio-group formControlName="gender">
+            <label nz-radio [nzValue]="0">Male</label>
+            <label nz-radio [nzValue]="1">Female</label>
+          </nz-radio-group>
+        </nz-form-control>
+      </nz-form-item>
+
+      <!-- Shift Preference -->
+      <nz-form-item>
+        <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired nzFor="shiftPreference">Shift Preference</nz-form-label>
+        <nz-form-control [nzSm]="14" [nzXs]="24" nzErrorTip="Please select shift preference!">
+          <nz-select formControlName="shiftPreference" nzPlaceHolder="Select Shift Preference">
+            <nz-option [nzValue]="0" nzLabel="Day"></nz-option>
+            <nz-option [nzValue]="1" nzLabel="Night"></nz-option>
+            <nz-option [nzValue]="2" nzLabel="Both"></nz-option>
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+
+      <!-- Day Off -->
+      <nz-form-item>
+        <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired nzFor="dayOff">Day Off</nz-form-label>
+        <nz-form-control [nzSm]="14" [nzXs]="24" nzErrorTip="Please select day off!">
+          <nz-select formControlName="dayOff" nzPlaceHolder="Select Day Off">
+            <nz-option [nzValue]="0" nzLabel="Sunday"></nz-option>
+            <nz-option [nzValue]="1" nzLabel="Monday"></nz-option>
+            <nz-option [nzValue]="2" nzLabel="Tuesday"></nz-option>
+            <nz-option [nzValue]="3" nzLabel="Wednesday"></nz-option>
+            <nz-option [nzValue]="4" nzLabel="Thursday"></nz-option>
+            <nz-option [nzValue]="5" nzLabel="Friday"></nz-option>
+            <nz-option [nzValue]="6" nzLabel="Saturday"></nz-option>
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+    </form>
+  </div>
+  <div *nzModalFooter>
+    <button nz-button nzType="default" type="button" (click)="closeOfficerModal()">Cancel</button>
+    <button nz-button nzType="primary" [nzLoading]="isConfirmLoading" type="button" (click)="submitOfficerForm()" >
+      {{ isEditMode ? 'Save' : 'Add' }}
+    </button>
+    <button nz-button nzType="default" nzDanger type="button" (click)="deleteOfficer()" [nzLoading]="isConfirmLoading">
+      Delete
+    </button>
+  </div>
+</nz-modal>
+
+<nz-alert
+  *ngIf="showDeleteAlert"
+  [nzType]="deleteAlertMessage === 'Officer deleted successfully!' ? 'success' : 'error'"
+  [nzMessage]="deleteAlertMessage"
+  nzShowIcon
+  [nzCloseable]="true"
+  (nzOnClose)="showDeleteAlert = false"
+  style="margin-bottom: 16px;"
+></nz-alert>
+
+<nz-alert
+  *ngIf="showSuccessAlert"
+  [nzType]="successAlertMessage === 'Officer added successfully!' ? 'success' : 'error'"
+  [nzMessage]="successAlertMessage"
+  nzShowIcon
+  [nzCloseable]="true"
+  (nzOnClose)="showSuccessAlert = false"
+  style="margin-bottom: 16px;"
+></nz-alert>
+
+
+
+
+  
+<!-- Empty state template when no officers exist -->
+<ng-template #noOfficers>
+  <nz-empty
+    nzNotFoundImage="https://gw.alipayobjects.com/zos/antfincdn/ZHrcdLPrvN/empty.svg"
+    [nzNotFoundContent]="contentTpl"
+  >
+    <ng-template #contentTpl>
+      <span>
+        Results: 
+        <a href="#API">No officers found on the system.</a>
+        <br/>
+        <button nz-button nzType="primary" (click)="showAddOfficerModal()" style="margin-top: 12px;">
+          Add Officer
+        </button>
+      </span>
+    </ng-template>
+  </nz-empty>
+</ng-template>
+

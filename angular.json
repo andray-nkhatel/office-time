@@ -27,6 +27,7 @@
               }
             ],
             "styles": [
+              "./node_modules/ng-zorro-antd/ng-zorro-antd.min.css",
               "src/styles.css"
             ],
             "scripts": [],
@@ -38,6 +39,7 @@
           },
           "configurations": {
             "production": {
+              
               "budgets": [
                 {
                   "type": "initial",
@@ -57,6 +59,7 @@
               "extractLicenses": false,
               "sourceMap": true
             }
+            
           },
           "defaultConfiguration": "production"
         },
@@ -87,9 +90,12 @@
               {
                 "glob": "**/*",
                 "input": "public"
+                
               }
+              
             ],
             "styles": [
+              "./node_modules/ng-zorro-antd/ng-zorro-antd.min.css",
               "src/styles.css"
             ],
             "scripts": []
@@ -97,5 +103,12 @@
         }
       }
     }
+  },
+  "cli": {
+    "analytics": false
   }
+
+
+  
+  
 }
