@@ -1,17 +1,16 @@
 
 
 <div *ngIf="officers.length > 0; else noOfficers">
+
     
- 
-    
-     <nz-space [nzSize]="10">
-        <h1 *nzSpaceItem nz-typography>Officers</h1>
-        <button *nzSpaceItem nz-button nzType="primary" (click)="showAddOfficerModal()">Add</button>
-    </nz-space> 
+  <div class="table-actions" style="margin-bottom: 16px; display: flex; gap: 8px;justify-content:space-between; align-items:center;">
+    <h1 nz-title>Officers</h1>
+    <button type="button" nz-button nzType="primary" (click)="showAddOfficerModal()">Add</button>
+  </div> 
 
     
 
-    <nz-table #sortTable [nzBordered]="true" nzSize="small" [nzData]="officers" nzSize="middle">
+    <nz-table #sortTable [nzBordered]="true" [nzScroll]="{y:'80vh'}" nzSize="small" [nzData]="officers">
       
       <thead>
         <tr>

@@ -1,30 +1,25 @@
+
 import { Component } from '@angular/core';
-import { Injectable} from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { CommonModule } from '@angular/common';
-import { NzModalModule, NzModalRef, NzModalService } from 'ng-zorro-antd/modal';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzTypographyModule } from 'ng-zorro-antd/typography';
-import { NzSpaceModule, NzSpaceSize} from 'ng-zorro-antd/space';
+import { NzSpaceModule } from 'ng-zorro-antd/space';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NzOptionComponent, NzSelectModule } from 'ng-zorro-antd/select';
+import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
 
-
-
-
-@Injectable({ providedIn: 'root' })
 @Component({
   selector: 'app-officers',
-  // imports: [NzButtonModule, NzEmptyModule, CommonModule, NzTableModule, NzModalModule],
-  standalone: true, // Explicitly declare as standalone
+  standalone: true,
   host: { ngSkipHydration: 'true' },
   imports: [
     NzAlertModule,
@@ -41,18 +36,16 @@ import { NzAlertModule } from 'ng-zorro-antd/alert';
     NzFormModule,
     NzInputModule,
     NzSpaceModule,
-    FormsModule,
-    ReactiveFormsModule],
+    ReactiveFormsModule
+  ],
   templateUrl: './officers.component.html',
-  styleUrls: ['./officers.component.css'] // Corrected 'styleUrl' to 'styleUrls' (array)
+  styleUrls: ['./officers.component.css']
 })
 export class OfficersComponent {
-  private baseUrl = 'http://localhost:5228/api'; // Define base URL directly
-  
+  private baseUrl = 'http://localhost:5228/api';
+
   officers: Officer[] = []; 
   selectedOfficer: Officer | null = null; 
-  
-  // isVisible = false;
   isConfirmLoading = false;
   officerForm: FormGroup;
   isOfficerDetailsVisible = false;
@@ -60,10 +53,32 @@ export class OfficersComponent {
   isEditMode = false;
   showDeleteAlert = false;
   deleteAlertMessage = '';
-
   showSuccessAlert = false;
   successAlertMessage = '';
-  
+  listOfData: Officer[] = [];
+
+  constructor(
+    private http: HttpClient,
+    private modalService: NzModalService,
+    private fb: FormBuilder
+  ) {
+    this.fetchOfficers(); 
+    this.officerForm = this.fb.group({
+      firstName: ['', [Validators.required]],
+      lastName: ['', [Validators.required]],
+      gender: [null, [Validators.required]],
+      shiftPreference: [null, [Validators.required]],
+      dayOff: [null, [Validators.required]]
+    });
+  } 
+
+  fetchOfficers() {
+    this.http.get<OfficerApiResponse>(`${this.baseUrl}/officers`).subscribe((response) => {
+      // Defensive: check for $values
+      this.officers = response?.$values ?? [];
+      this.listOfData = this.officers;
+    });
+  }
 
   openEditOfficerModal() {
     this.isEditMode = true;
@@ -92,7 +107,6 @@ export class OfficersComponent {
     this.officerForm.reset();
     this.isOfficerModalVisible = true;
   }
-  
 
   deleteOfficer() {
     if (!this.selectedOfficer) return;
@@ -140,22 +154,19 @@ export class OfficersComponent {
       this.officerForm.markAllAsTouched();
       return;
     }
-  
     this.isConfirmLoading = true;
-  
     if (this.isEditMode && this.selectedOfficer) {
       // Edit (update) officer
       const payload = { ...this.officerForm.value, id: this.selectedOfficer.id };
       this.http.put(`${this.baseUrl}/officers/${this.selectedOfficer.id}`, payload).subscribe({
         next: () => {
           this.isConfirmLoading = false;
-          this.fetchOfficers(); // Refresh officers list
-          this.closeOfficerModal(); // Close the modal
-          this.closeOfficerDetails(); // Reset officer details
+          this.fetchOfficers();
+          this.closeOfficerModal();
+          this.closeOfficerDetails();
         },
         error: () => {
           this.isConfirmLoading = false;
-          // Optionally show error message
         }
       });
     } else {
@@ -163,18 +174,15 @@ export class OfficersComponent {
       this.http.post(`${this.baseUrl}/officers`, this.officerForm.value).subscribe({
         next: () => {
           this.isConfirmLoading = false;
-          this.fetchOfficers(); // Refresh officers list
-          this.closeOfficerModal(); // Close the modal
+          this.fetchOfficers();
+          this.closeOfficerModal();
         },
         error: () => {
           this.isConfirmLoading = false;
-          // Optionally show error message
         }
       });
     }
   }
-  
-  
 
   openOfficerDetails(officer: Officer) {
     this.selectedOfficer = officer;
@@ -185,59 +193,6 @@ export class OfficersComponent {
     this.isOfficerDetailsVisible = false;
     this.selectedOfficer = null;
   }
-  
-  
-
-  constructor(private http: HttpClient, private modalService: NzModalService, private fb: FormBuilder) {
-    this.fetchOfficers(); 
-    this.officerForm = this.fb.group({
-      firstName: ['', [Validators.required]],
-      lastName: ['', [Validators.required]],
-      gender: [null, [Validators.required]],
-      shiftPreference: [null, [Validators.required]],
-      dayOff: [null, [Validators.required]]
-    });
-  } 
-
-  // submitForm(): void {
-  //   if (this.officerForm.valid) {
-  //     this.isConfirmLoading = true;
-  //     this.http.post(`${this.baseUrl}/officers`, this.officerForm.value).subscribe(() => {
-  //       this.isVisible = false;
-  //       this.isConfirmLoading = false;
-  //       this.fetchOfficers(); // Refresh list after adding
-  //     });
-  //   }
-  // }
-
-  
-
-  // showAddOfficerModal(): void {
-  //   console.log('Modal should open now');
-  //   this.isVisible = true;
-  // }
-
-  handleOk(): void {
-    this.isConfirmLoading = true;
-    setTimeout(() => {
-      this.isOfficerModalVisible = false;
-      this.isConfirmLoading = false;
-    }, 3000);
-  }
-
-  handleCancel(): void {
-    this.isOfficerModalVisible = false;
-  }
-
-  
-  fetchOfficers() {
-    this.http.get<Officer[]>(`${this.baseUrl}/officers`).subscribe((officers) => {
-      this.officers = officers;
-      this.listOfData = officers; // Assign API response to table data
-      // console.log(this.officers); // Debugging output
-    });
-  }
-  
 
   listOfColumn = [
     {
@@ -261,30 +216,30 @@ export class OfficersComponent {
       priority: 3
     }
   ];
-  
-
-  listOfData: Officer[] = [];
 
   getDayOff(day: number): string {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    return days[day] || 'Unknown'; // Prevents errors if day is out of range
+    return days[day] || 'Unknown';
   }
-  
 }
 
+// API response interface for officers
+export interface OfficerApiResponse {
+  $id: string;
+  $values: Officer[];
+}
 
-
-// Defined the Officer interface correctly
+// Officer interface
 export interface Officer {
   id: number;
   firstName: string;
   lastName: string;
   gender: Gender;
   shiftPreference: ShiftPreference;
-  dayOff: number; // Day of week for day off (0 = Sunday, 1 = Monday, etc.)
+  dayOff: number;
 }
 
-export enum Gender{
+export enum Gender {
   Male = 0,
   Female = 1
 }
@@ -292,6 +247,5 @@ export enum Gender{
 export enum ShiftPreference {
   Day = 0,
   Night = 1,
-  Both= 3
+  Both = 3
 }
-

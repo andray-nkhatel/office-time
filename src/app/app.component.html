@@ -8,8 +8,16 @@
   >
     <div class="sidebar-logo">
       <a href="#" target="_blank">
-        <!-- <img src="/public/chs.png" width="10px"  alt="logo"> -->
-        <h1>Officer Scheduler</h1>
+        <ng-container *ngIf="!isCollapsed; else collapsedLogo">
+          <!-- <img src="assets/chs.png" alt="Logo"> -->
+          <img src="/src/assets/chs.png" alt="Logo">
+          <h1>Scheduler Pro</h1>
+        </ng-container>
+        <ng-template #collapsedLogo>
+         
+
+          <!-- Or: <span class="logo-abbr">OS</span> -->
+        </ng-template>
       </a>
       
     </div>

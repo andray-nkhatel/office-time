@@ -1,31 +1,65 @@
-<div *ngIf="schedules.length > 0; else noSchedules">
-
-
-
-
-
-
-</div> 
- 
-
-
-<!-- Empty state template when no schedules exist -->
-<ng-template #noSchedules>
-    <nz-empty
-      nzNotFoundImage="https://gw.alipayobjects.com/zos/antfincdn/ZHrcdLPrvN/empty.svg"
-      [nzNotFoundContent]="contentTpl"
-    >
-      <ng-template #contentTpl>
-        <span>
-          Results: 
-          <a href="#API">No schedules found on system.</a>
-          <br/>
-          <!-- <button nz-button nzType="primary" (click)="showAddOfficerModal()" style="margin-top: 12px;">
-            Add Officer
-          </button> -->
-        </span>
-      </ng-template>
-    </nz-empty>
-  </ng-template>
+<div class="table-actions" style="margin-bottom: 16px; display: flex; gap: 8px;align-items: center;">
+  <h1 nz-title style="margin-right: auto;">Shifts</h1>
+  <div style="display: flex; gap: 8px;">
+    <button nz-button nzType="primary" (click)="onGenerate()">
+      Generate
+    </button>
+    <button nz-button nzType="default" (click)="onPrint()">
+      Print
+    </button>
+  </div>
   
+</div>
+
+
+<nz-alert
+  *ngIf="alertType"
+  [nzType]="alertType"
+  [nzMessage]="alertMessage"
+  style="margin-bottom: 16px; justify-content: center;"
+  nzShowIcon>
+</nz-alert>
+
+<nz-table
+  [nzData]="officers"
+  [nzBordered]="true"
+  [nzSize]="'small'"
+  [nzScroll]="{ y: '100vh' }"
   
+>
+  <thead>
+    <tr>
+      <th nzWidth="20%" ><h5 nz-typography>Officer Name</h5></th>
+      <th><h5 nz-typography >Shifts</h5></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let officer of officers">
+      <td nzAlign="center" >{{ officer.fullName }}</td>
+      <td>
+        <ng-container *ngIf="officer.shifts.length > 0; else noShifts">
+          <ul class="list-unstyled mb-0">
+            <li *ngFor="let shift of officer.shifts">
+              <strong>{{ shift.date | date:'yyyy-MM-dd' }}</strong>: <span class="text-muted">{{ shift.type }}</span>
+            </li>
+          </ul>
+        </ng-container>
+        <ng-template #noShifts>
+          <span>No shifts</span>
+        </ng-template>
+      </td>
+    </tr>
+    <tr *ngIf="officers.length === 0">
+      <td colspan="2">
+        <nz-empty
+          nzNotFoundImage="https://gw.alipayobjects.com/zos/antfincdn/ZHrcdLPrvN/empty.svg"
+        >
+          <span>
+            Results:
+            <a href="#API">No officers found on system.</a>
+          </span>
+        </nz-empty>
+      </td>
+    </tr>
+  </tbody>
+</nz-table>

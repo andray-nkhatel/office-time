@@ -1,104 +1,161 @@
-import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-import { NzEmptyModule } from 'ng-zorro-antd/empty';
-import { NzModalModule } from 'ng-zorro-antd/modal';
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzEmptyModule } from 'ng-zorro-antd/empty';
+import { NzTableModule } from 'ng-zorro-antd/table';
+import { CommonModule } from '@angular/common';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { NzFormModule } from 'ng-zorro-antd/form';
+import { NzInputModule } from 'ng-zorro-antd/input';
+import { NzTypographyModule } from 'ng-zorro-antd/typography';
+import { NzSpaceModule } from 'ng-zorro-antd/space';
+import { NzSelectModule } from 'ng-zorro-antd/select';
+import { NzRadioModule } from 'ng-zorro-antd/radio';
+import { NzGridModule } from 'ng-zorro-antd/grid';
+import { NzAlertModule } from 'ng-zorro-antd/alert';
 
-
-@Injectable({ providedIn: 'root' })
 @Component({
   selector: 'app-schedules',
+  standalone: true,
+  host: { ngSkipHydration: 'true' },
   imports: [
-    NzModalModule,
+    NzAlertModule,
+    NzGridModule,
+    NzSelectModule,
+    NzRadioModule,
+    FormsModule,
+    NzButtonModule,
     NzEmptyModule,
-    CommonModule
-
+    CommonModule,
+    NzTableModule,
+    NzModalModule,
+    NzTypographyModule,
+    NzFormModule,
+    NzInputModule,
+    NzSpaceModule,
+    ReactiveFormsModule
   ],
   templateUrl: './schedules.component.html',
-  styleUrl: './schedules.component.css'
+  styleUrls: ['./schedules.component.css']
 })
 export class SchedulesComponent {
+  private baseUrl = 'http://localhost:5228/api';
 
-  private baseUrl = 'http://localhost:5228/api'; // Define base URL directly
+  officers: OfficerWithShifts[] = [];
 
-  constructor(private http: HttpClient) {this.fetchSchedules();} 
+  alertType: 'success' | 'error' | null = null;
+  alertMessage: string = '';
+  private alertTimeout: any = null;
 
-    listOfData: Schedule[] = [];
-    fetchSchedules() {
-      this.http.get<Schedule[]>(`${this.baseUrl}/schedule/current`).subscribe((schedules) => {
-        this.schedules = this.schedules;
-        this.listOfData = schedules; // Assign API response to table data
-        console.log(this.schedules); // Debugging output
-      });
-    }
-    
-  schedules: Schedule[] = []; 
+  constructor(private http: HttpClient, private modalService: NzModalService) {
+    this.fetchSchedule();
+  }
 
-  listOfColumn = [
-      {
-        title: 'Name',
-        compare: (a: Officer, b: Officer) => a.firstName.localeCompare(b.firstName),
-        priority: false
-      },
-      {
-        title: 'Gender',
-        compare: (a: Officer, b: Officer) => a.gender - b.gender,
-        priority: 2
-      },
-      {
-        title: 'Shift Preference',
-        compare: (a: Officer, b: Officer) => a.shiftPreference - b.shiftPreference,
-        priority: 1
-      },
-      {
-        title: 'Day Off',
-        compare: (a: Officer, b: Officer) => a.dayOff - b.dayOff,
-        priority: 3
+  fetchSchedule() {
+    this.http.get<ScheduleApiResponse>(`${this.baseUrl}/schedule/current`).subscribe((schedule) => {
+      // Defensive: check for shifts and $values
+      const shifts: ShiftAssignment[] = schedule?.shifts?.$values ?? [];
+      // Group shifts by officerId
+      const officerMap = new Map<number, OfficerWithShifts>();
+
+      for (const shift of shifts) {
+        if (!officerMap.has(shift.officerId)) {
+          officerMap.set(shift.officerId, {
+            officerId: shift.officerId,
+            firstName: shift.officerFirstName,
+            lastName: shift.officerLastName,
+            fullName: shift.officerFullName,
+            shifts: []
+          });
+        }
+        officerMap.get(shift.officerId)!.shifts.push({
+          date: shift.date,
+          type: shift.type
+        });
       }
-    ];
 
+      this.officers = Array.from(officerMap.values());
+      // Optional: sort by officer name
+      this.officers.sort((a, b) => a.fullName.localeCompare(b.fullName));
+      // console.log('Grouped officers with shifts:', this.officers);
+    });
+  }
+
+  private showAlert(type: 'success' | 'error', message: string) {
+    this.alertType = type;
+    this.alertMessage = message;
+    if (this.alertTimeout) {
+      clearTimeout(this.alertTimeout);
+    }
+    this.alertTimeout = setTimeout(() => {
+      this.alertType = null;
+      this.alertMessage = '';
+      this.alertTimeout = null;
+    }, 3000);
+  }
+
+  onGenerate() {
+    this.http.get(`${this.baseUrl}/schedule/generate`).subscribe({
+      next: () => {
+        this.showAlert('success', 'Generated New Schedule');
+        this.fetchSchedule(); // Refresh the schedule after generation
+      },
+      error: (err) => {
+        this.showAlert('error', 'Failed to generate schedule');
+        console.error('Failed to generate schedule:', err);
+      }
+    });
+  }
+
+  onPrint() {
+    this.http.get(`${this.baseUrl}/pdf/schedule/current`, { responseType: 'blob' }).subscribe((pdfBlob) => {
+      const blob = new Blob([pdfBlob], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      // Option 1: Open in new tab
+      window.open(url);
+  
+      // Option 2: Trigger download (uncomment if you want download instead of open)
+      // const a = document.createElement('a');
+      // a.href = url;
+      // a.download = 'schedule.pdf';
+      // a.click();
+      // window.URL.revokeObjectURL(url);
+    });
+  }
+    
+  
 }
 
-export interface Schedule {
+// API response interfaces
+export interface ScheduleApiResponse {
+  $id: string;
   id: number;
-  startDate: Date;
-  endDate: Date;
-  shifts: Shift;
+  startDate: string;
+  endDate: string;
+  shifts: {
+    $id: string;
+    $values: ShiftAssignment[];
+  };
 }
 
-export enum ShiftType
-{
-    Day,
-    Night
-}
-
-export interface Shift{
+export interface ShiftAssignment {
+  $id: string;
   id: number;
-  date: Date;
-  type: ShiftType;
-  officer: Officer;
+  date: string;
+  type: string;
+  officerId: number;
+  officerFirstName: string;
+  officerLastName: string;
+  officerFullName: string;
+  scheduleId: number;
 }
 
-export interface Officer {
-  id: number;
+// For table display
+export interface OfficerWithShifts {
+  officerId: number;
   firstName: string;
   lastName: string;
-  gender: Gender;
-  shiftPreference: ShiftPreference;
-  dayOff: number; // Day of week for day off (0 = Sunday, 1 = Monday, etc.)
+  fullName: string;
+  shifts: { date: string; type: string }[];
 }
-
-
-export enum Gender{
-  Male = 0,
-  Female = 1
-}
-
-export enum ShiftPreference {
-  Day = 0,
-  Night = 1,
-  Both= 3
-}
-
-
