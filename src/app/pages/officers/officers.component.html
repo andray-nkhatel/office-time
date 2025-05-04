@@ -3,14 +3,25 @@
 <div *ngIf="officers.length > 0; else noOfficers">
 
     
-  <div class="table-actions" style="margin-bottom: 16px; display: flex; gap: 8px;justify-content:space-between; align-items:center;">
-    <h1 nz-title>Officers</h1>
-    <button type="button" nz-button nzType="primary" (click)="showAddOfficerModal()">Add</button>
+  <div class="table-actions" style="margin-bottom: 16px; display: flex; gap: 8px;align-items:center;">
+   
+      <h3 nz-title style="margin-right: auto;">Officers</h3>
+      <p nz-paragraph style="margin: 0;">Total Officers: {{ officers.length }}</p>
+    
+  <div style="display: flex; justify-content: flex-end;">
+    <nz-input-group [nzSuffix]="suffixIconSearch">
+      <input type="text" nz-input placeholder="Search officer by name" [(ngModel)]="searchText" (ngModelChange)="onSearch()"/>
+    </nz-input-group>
+    <ng-template #suffixIconSearch>
+      <span nz-icon nzType="search"></span>
+    </ng-template>
+    <button style="margin-left: 5px;" type="button" nz-button nzType="primary" (click)="showAddOfficerModal()">Add</button>
+  </div>
   </div> 
 
     
 
-    <nz-table #sortTable [nzBordered]="true" [nzScroll]="{y:'80vh'}" nzSize="small" [nzData]="officers">
+    <nz-table #sortTable [nzBordered]="true"  nzSize="small" [nzData]="officers" [nzShowPagination]="false" [nzTotal]="officers.length">
       
       <thead>
         <tr>
@@ -21,10 +32,30 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let officer of officers" (click)="openOfficerDetails(officer)">
-          <td>{{ officer.firstName }} {{ officer.lastName }}</td>
-          <td>{{ officer.gender === 0 ? 'Male' : 'Female' }}</td>
-          <td>{{ officer.shiftPreference === 0 ? 'Day' : officer.shiftPreference === 1 ? 'Night' : 'Both' }}</td>
+        <tr *ngFor="let officer of filteredOfficers" (click)="openOfficerDetails(officer)">
+          <td>
+            <nz-icon nzType="user" nzTheme="outline" />
+            {{ officer.firstName }} {{ officer.lastName }}
+          </td>
+          <td>{{ officer.gender === 0 ? 'Male' : 'Female' }}
+            <ng-container *ngIf="officer.gender === 0">
+              <nz-icon nzType="man" nzTheme="outline" />
+            </ng-container>
+            <ng-container *ngIf="officer.gender === 1">
+              <nz-icon nzType="woman" nzTheme="outline" />
+            </ng-container>
+          </td>
+          <td>
+            {{ officer.shiftPreference === 0 ? 'Day' : officer.shiftPreference === 3 ? 'Night' : 'Both' }}
+            <ng-container *ngIf="officer.shiftPreference === 0">
+              <nz-icon nzType="sun" [nzSpin]="true" style="color: red;" nzTheme="outline"></nz-icon>
+            </ng-container>
+            <ng-container *ngIf="officer.shiftPreference > 0">
+              <nz-icon nzType="sun" nzTheme="outline" [nzSpin]="true" nzTheme="outline" style="color: #faad14;"></nz-icon> -
+              <nz-icon nzType="moon" nzTheme="outline" style="color: #1890ff;"/>
+            </ng-container>
+          </td>
+                 
           <td>{{ getDayOff(officer.dayOff) }}</td>
         </tr>
       </tbody>

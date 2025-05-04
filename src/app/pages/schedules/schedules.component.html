@@ -1,15 +1,31 @@
 <div class="table-actions" style="margin-bottom: 16px; display: flex; gap: 8px;align-items: center;">
-  <h1 nz-title style="margin-right: auto;">Shifts</h1>
+  <h3 nz-title style="margin-right: auto;">Shifts</h3>
   <div style="display: flex; gap: 8px;">
-    <button nz-button nzType="primary" (click)="onGenerate()">
-      Generate
-    </button>
+    <nz-input-group [nzSuffix]="suffixIconSearch">
+      <input type="text" nz-input placeholder="Search officer by name" [(ngModel)]="searchText" (ngModelChange)="onSearch()"/>
+    </nz-input-group>
+    <ng-template #suffixIconSearch>
+      <span nz-icon nzType="search"></span>
+    </ng-template>
+   
     <button nz-button nzType="default" (click)="onPrint()">
-      Print
+      <nz-icon nzType="snippets" nzTheme="outline" />
+     Print
     </button>
   </div>
   
 </div>
+
+<!-- Search input field -->
+<!-- <div style="margin-bottom: 16px;">
+  <nz-input-group [nzSuffix]="suffixIconSearch">
+    <input type="text" nz-input placeholder="Search officer by name" [(ngModel)]="searchText" (ngModelChange)="onSearch()"/>
+  </nz-input-group>
+  <ng-template #suffixIconSearch>
+    <span nz-icon nzType="search"></span>
+  </ng-template>
+</div> -->
+
 
 
 <nz-alert
@@ -21,11 +37,10 @@
 </nz-alert>
 
 <nz-table
-  [nzData]="officers"
+  [nzData]="filteredOfficers"
   [nzBordered]="true"
   [nzSize]="'small'"
-  [nzScroll]="{ y: '100vh' }"
-  
+  [nzShowPagination]="false"
 >
   <thead>
     <tr>
@@ -34,13 +49,23 @@
     </tr>
   </thead>
   <tbody>
-    <tr *ngFor="let officer of officers">
+    <tr *ngFor="let officer of filteredOfficers">
       <td nzAlign="center" >{{ officer.fullName }}</td>
       <td>
         <ng-container *ngIf="officer.shifts.length > 0; else noShifts">
           <ul class="list-unstyled mb-0">
             <li *ngFor="let shift of officer.shifts">
-              <strong>{{ shift.date | date:'yyyy-MM-dd' }}</strong>: <span class="text-muted">{{ shift.type }}</span>
+              <strong>{{ shift.date | date:'fullDate' }}</strong>: 
+              <span class="text-muted">
+                {{ shift.type }}
+                <ng-container *ngIf="shift.type === 'Day'">
+                  <nz-icon nzType="sun" nzTheme="outline" style="color: #faad14;"/>
+                </ng-container>
+                <ng-container *ngIf="shift.type === 'Night'">
+                  <nz-icon nzType="moon" nzTheme="outline" style="color: #1890ff;"/>
+                </ng-container>
+              </span>
+    
             </li>
           </ul>
         </ng-container>

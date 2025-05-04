@@ -1,0 +1,20 @@
+.list-unstyled {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.list-unstyled li {
+    padding: 10px 15px;
+    border-bottom: 1px solid #ddd;
+    transition: background-color 0.3s ease;
+}
+
+.list-unstyled li:hover {
+    background-color: #f0f0f0;
+    cursor: pointer;
+}
+
+.list-unstyled li:last-child {
+    border-bottom: none;
+}

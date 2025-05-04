@@ -1,4 +1,3 @@
-
 import { Component } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { NzButtonModule } from 'ng-zorro-antd/button';
@@ -16,6 +15,7 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
+import { NzIconModule } from 'ng-zorro-antd/icon';
 
 @Component({
   selector: 'app-officers',
@@ -36,7 +36,8 @@ import { NzAlertModule } from 'ng-zorro-antd/alert';
     NzFormModule,
     NzInputModule,
     NzSpaceModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    NzIconModule
   ],
   templateUrl: './officers.component.html',
   styleUrls: ['./officers.component.css']
@@ -45,6 +46,8 @@ export class OfficersComponent {
   private baseUrl = 'http://localhost:5228/api';
 
   officers: Officer[] = []; 
+  filteredOfficers: Officer[] = []; // Array to hold filtered officers
+  searchText: string = ''; // Property to store search query
   selectedOfficer: Officer | null = null; 
   isConfirmLoading = false;
   officerForm: FormGroup;
@@ -56,6 +59,7 @@ export class OfficersComponent {
   showSuccessAlert = false;
   successAlertMessage = '';
   listOfData: Officer[] = [];
+  
 
   constructor(
     private http: HttpClient,
@@ -77,7 +81,31 @@ export class OfficersComponent {
       // Defensive: check for $values
       this.officers = response?.$values ?? [];
       this.listOfData = this.officers;
+      
+      // Initialize filtered officers with all officers
+      this.filteredOfficers = [...this.officers];
+      
+      // Apply search if there's any existing search text
+      if (this.searchText.trim()) {
+        this.onSearch();
+      }
     });
+  }
+
+  // Method to handle search functionality
+  onSearch(): void {
+    if (!this.searchText.trim()) {
+      // If search text is empty, show all officers
+      this.filteredOfficers = [...this.officers];
+    } else {
+      // Filter officers based on search text
+      const searchTerm = this.searchText.toLowerCase().trim();
+      this.filteredOfficers = this.officers.filter(officer => 
+        officer.firstName.toLowerCase().includes(searchTerm) || 
+        officer.lastName.toLowerCase().includes(searchTerm) ||
+        `${officer.firstName} ${officer.lastName}`.toLowerCase().includes(searchTerm)
+      );
+    }
   }
 
   openEditOfficerModal() {

@@ -14,6 +14,7 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
+import { NzIconModule } from 'ng-zorro-antd/icon';
 
 @Component({
   selector: 'app-schedules',
@@ -34,13 +35,16 @@ import { NzAlertModule } from 'ng-zorro-antd/alert';
     NzFormModule,
     NzInputModule,
     NzSpaceModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    NzIconModule,
   ],
   templateUrl: './schedules.component.html',
   styleUrls: ['./schedules.component.css']
 })
 export class SchedulesComponent {
   private baseUrl = 'http://localhost:5228/api';
+  filteredOfficers: OfficerWithShifts[] = []; // Array to hold filtered officers
+  searchText: string = ''; // Property to store search query
 
   officers: OfficerWithShifts[] = [];
 
@@ -78,8 +82,29 @@ export class SchedulesComponent {
       this.officers = Array.from(officerMap.values());
       // Optional: sort by officer name
       this.officers.sort((a, b) => a.fullName.localeCompare(b.fullName));
-      // console.log('Grouped officers with shifts:', this.officers);
+      
+      // Initialize filtered officers with all officers
+      this.filteredOfficers = [...this.officers];
+      
+      // Apply search if there's any existing search text
+      if (this.searchText.trim()) {
+        this.onSearch();
+      }
     });
+  }
+
+  // Method to handle search functionality
+  onSearch(): void {
+    if (!this.searchText.trim()) {
+      // If search text is empty, show all officers
+      this.filteredOfficers = [...this.officers];
+    } else {
+      // Filter officers based on search text
+      const searchTerm = this.searchText.toLowerCase().trim();
+      this.filteredOfficers = this.officers.filter(officer => 
+        officer.fullName.toLowerCase().includes(searchTerm)
+      );
+    }
   }
 
   private showAlert(type: 'success' | 'error', message: string) {
@@ -112,19 +137,23 @@ export class SchedulesComponent {
     this.http.get(`${this.baseUrl}/pdf/schedule/current`, { responseType: 'blob' }).subscribe((pdfBlob) => {
       const blob = new Blob([pdfBlob], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+
+      const fileName = `Schedule-${hours}${minutes}.pdf`;
+      
       // Option 1: Open in new tab
       window.open(url);
   
       // Option 2: Trigger download (uncomment if you want download instead of open)
-      // const a = document.createElement('a');
-      // a.href = url;
-      // a.download = 'schedule.pdf';
-      // a.click();
-      // window.URL.revokeObjectURL(url);
+      //const a = document.createElement('a');
+      //a.href = url;
+      //a.download = fileName;
+      //a.click();
+      //window.URL.revokeObjectURL(url);
     });
   }
-    
-  
 }
 
 // API response interfaces
