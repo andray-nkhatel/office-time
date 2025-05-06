@@ -6,39 +6,29 @@
     [(nzCollapsed)]="isCollapsed"
     [nzTrigger]="null"
   >
-    <div class="sidebar-logo">
-      <a href="#" target="_blank">
-        <ng-container *ngIf="!isCollapsed; else collapsedLogo">
-          <!-- <img src="assets/chs.png" alt="Logo"> -->
-          <img src="/src/assets/chs.png" alt="Logo">
-          <h1>Scheduler Pro</h1>
-        </ng-container>
-        <ng-template #collapsedLogo>
-         
-
-          <!-- Or: <span class="logo-abbr">OS</span> -->
-        </ng-template>
-      </a>
-      
-    </div>
+  <div class="sidebar-logo">
+    <a href="#" target="_blank">
+      <img src="https://ng.ant.design/assets/img/logo.svg" alt="logo">
+      <h1>COMRADE</h1>
+    </a>
+  </div>
     <ul nz-menu nzTheme="dark" nzMode="inline" [nzInlineCollapsed]="isCollapsed">
-      <li nz-submenu nzOpen nzTitle="Manage Officers" nzIcon="dashboard">
-        <ul>
-          <li nz-menu-item nzMatchRouter nz-Icon="user-add">
-            <a routerLink="/officer">Officers</a>
-          </li>
-        
-        </ul>
-      </li>
-      <li nz-submenu nzOpen nzTitle="Manage Schedules" nzIcon="copy" nzTheme="twotone">
+      <li nz-submenu nzOpen nzTitle="Dashboard" nzIcon="dashboard">
         <ul>
           <li nz-menu-item nzMatchRouter>
-            <a routerLink="schedule" >Schedules</a>
+            <nz-icon nzType="team" nzTheme="outline" />
+            <a routerLink="officer">Officers</a>
+          </li>
+          <li nz-menu-item nzMatchRouter >
+            <nz-icon nzType="copy"/>
+            <a routerLink="schedule">Shifts</a>
           </li>
         </ul>
       </li>
     </ul>
   </nz-sider>
+
+
   <nz-layout>
     <nz-header>
       <div class="app-header">

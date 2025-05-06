@@ -7,11 +7,23 @@
     <ng-template #suffixIconSearch>
       <span nz-icon nzType="search"></span>
     </ng-template>
-   
-    <button nz-button nzType="default" (click)="onPrint()">
+
+    <!-- <button nz-button nzType="primary" (click)="onGenerateNextWeek()">
+      <nz-icon nzType="snippets" nzTheme="outline" />
+     Generate
+    </button>
+    -->
+    <!-- <button nz-button nzType="default" (click)="onPrint()">
       <nz-icon nzType="snippets" nzTheme="outline" />
      Print
-    </button>
+    </button> -->
+
+
+<button nz-button nzType="primary" (click)="onViewCurrent()">View Current Week</button>
+<button nz-button nzType="primary" (click)="onViewNextWeek()">View Next Week</button>
+<button nz-button nzType="primary" (click)="onGenerateNextWeek()">Generate Next Week's Schedule</button>
+<button nz-button nzType="default" nz-button (click)="onPrint()"><nz-icon nzType="snippets" nzTheme="outline" />Print</button>
+
   </div>
   
 </div>

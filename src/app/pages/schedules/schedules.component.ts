@@ -1,3 +1,4 @@
+
 import { Component } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { NzButtonModule } from 'ng-zorro-antd/button';
@@ -43,24 +44,30 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 })
 export class SchedulesComponent {
   private baseUrl = 'http://localhost:5228/api';
-  filteredOfficers: OfficerWithShifts[] = []; // Array to hold filtered officers
-  searchText: string = ''; // Property to store search query
-
+  filteredOfficers: OfficerWithShifts[] = [];
+  searchText: string = '';
   officers: OfficerWithShifts[] = [];
-
   alertType: 'success' | 'error' | null = null;
   alertMessage: string = '';
   private alertTimeout: any = null;
+  // 'current' or 'next-week'
+  scheduleView: 'current' | 'next-week' = 'current';
 
   constructor(private http: HttpClient, private modalService: NzModalService) {
     this.fetchSchedule();
   }
 
-  fetchSchedule() {
-    this.http.get<ScheduleApiResponse>(`${this.baseUrl}/schedule/current`).subscribe((schedule) => {
-      // Defensive: check for shifts and $values
+  /**
+   * Fetches the schedule data.
+   * @param which - 'current' or 'next-week'
+   */
+  fetchSchedule(which: 'current' | 'next-week' = 'current') {
+    const endpoint = which === 'current'
+      ? `${this.baseUrl}/schedule/current`
+      : `${this.baseUrl}/schedule/next-week`;
+
+    this.http.get<ScheduleApiResponse>(endpoint).subscribe((schedule) => {
       const shifts: ShiftAssignment[] = schedule?.shifts?.$values ?? [];
-      // Group shifts by officerId
       const officerMap = new Map<number, OfficerWithShifts>();
 
       for (const shift of shifts) {
@@ -80,28 +87,21 @@ export class SchedulesComponent {
       }
 
       this.officers = Array.from(officerMap.values());
-      // Optional: sort by officer name
       this.officers.sort((a, b) => a.fullName.localeCompare(b.fullName));
-      
-      // Initialize filtered officers with all officers
       this.filteredOfficers = [...this.officers];
-      
-      // Apply search if there's any existing search text
+
       if (this.searchText.trim()) {
         this.onSearch();
       }
     });
   }
 
-  // Method to handle search functionality
   onSearch(): void {
     if (!this.searchText.trim()) {
-      // If search text is empty, show all officers
       this.filteredOfficers = [...this.officers];
     } else {
-      // Filter officers based on search text
       const searchTerm = this.searchText.toLowerCase().trim();
-      this.filteredOfficers = this.officers.filter(officer => 
+      this.filteredOfficers = this.officers.filter(officer =>
         officer.fullName.toLowerCase().includes(searchTerm)
       );
     }
@@ -120,38 +120,62 @@ export class SchedulesComponent {
     }, 3000);
   }
 
-  onGenerate() {
-    this.http.get(`${this.baseUrl}/schedule/generate`).subscribe({
+  /**
+   * Generates the next week's schedule (POST) and fetches it.
+   */
+  generateNextWeekSchedule() {
+    this.http.post(`${this.baseUrl}/schedule/generate-next-week`, {}).subscribe({
       next: () => {
-        this.showAlert('success', 'Generated New Schedule');
-        this.fetchSchedule(); // Refresh the schedule after generation
+        this.showAlert('success', 'Generated Next Week\'s Schedule');
+        this.scheduleView = 'next-week';
+        this.fetchSchedule('next-week'); // Fetch next week's schedule after generation
       },
       error: (err) => {
-        this.showAlert('error', 'Failed to generate schedule');
-        console.error('Failed to generate schedule:', err);
+        this.showAlert('error', 'Failed to generate next week\'s schedule');
+        console.error('Failed to generate next week\'s schedule:', err);
       }
     });
   }
 
+  /**
+   * Handler for UI button to generate and view next week's schedule.
+   */
+  onGenerateNextWeek() {
+    this.generateNextWeekSchedule();
+  }
+
+  /**
+   * Handler for UI button to view current week's schedule.
+   */
+  onViewCurrent() {
+    this.scheduleView = 'current';
+    this.fetchSchedule('current');
+  }
+
+  /**
+   * Handler for UI button to view next week's schedule (if already generated).
+   */
+  onViewNextWeek() {
+    this.scheduleView = 'next-week';
+    this.fetchSchedule('next-week');
+  }
+
   onPrint() {
-    this.http.get(`${this.baseUrl}/pdf/schedule/current`, { responseType: 'blob' }).subscribe((pdfBlob) => {
+    // You may want to print current or next week's schedule based on scheduleView
+    const which = this.scheduleView;
+    const endpoint = which === 'current'
+      ? `${this.baseUrl}/pdf/schedule/current`
+      : `${this.baseUrl}/pdf/schedule/next-week`;
+
+    this.http.get(endpoint, { responseType: 'blob' }).subscribe((pdfBlob) => {
       const blob = new Blob([pdfBlob], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const now = new Date();
       const hours = String(now.getHours()).padStart(2, '0');
       const minutes = String(now.getMinutes()).padStart(2, '0');
 
-      const fileName = `Schedule-${hours}${minutes}.pdf`;
-      
-      // Option 1: Open in new tab
+      const fileName = `Schedule-${which}-${hours}${minutes}.pdf`;
       window.open(url);
-  
-      // Option 2: Trigger download (uncomment if you want download instead of open)
-      //const a = document.createElement('a');
-      //a.href = url;
-      //a.download = fileName;
-      //a.click();
-      //window.URL.revokeObjectURL(url);
     });
   }
 }

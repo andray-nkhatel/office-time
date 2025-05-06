@@ -68,6 +68,14 @@ nz-header {
   background: #fff;
   box-shadow: 0 1px 4px rgba(0,21,41,.08);
 }
+.user-info {
+  display: flex;
+  align-items: center;
+}
+
+.username {
+  margin: 0 8px;
+}
 
 nz-content {
   margin: 10px;
@@ -75,9 +83,9 @@ nz-content {
 
 .inner-content {
   padding: 24px;
-  background: #fff;
-  max-height: 80vh; /* or any value you want */
-  overflow-y: auto; 
+  /* background: #fff; */
+  max-height: 80vh;  
+  overflow-y: auto;  
    /* height: 100%;  */
 }
 
